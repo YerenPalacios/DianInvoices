@@ -22,8 +22,15 @@ class DianInvoiceService:
                 name=scrapper_invoice.get("receiver_information", {}).get("Nombre")
             )
 
+            events = [
+                DianEvent(
+                    eventNumber=event.get("code", ""),
+                    eventName=event.get("description", "")
+                ) for event in scrapper_invoice["events"]
+            ]
+
             dian_invoices[scrapper_invoice.pop("cufe")] = DianInvoice(
-                events=[DianEvent(eventNumber=2, eventName="")],
+                events=events,
                 seller_information=seller_information,
                 receiver_information=receiver_information,
                 link_graphic_representation=scrapper_invoice["link_graphic_representation"]

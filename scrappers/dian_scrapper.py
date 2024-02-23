@@ -54,13 +54,34 @@ class DianScrapper:
         divs_with_with_details = self.driver.find_elements(By.CLASS_NAME, "row-fe-details")
         invoice_raw_details = " ".join([div.text for div in divs_with_with_details])
         invoice_data = self.parse_details(invoice_raw_details)
+        invoice_events = self.get_invoice_events(self.get_element(By.ID,"container1"))
         self.invoices_data.append(invoice_data)
         invoice_data['cufe'] = invoice_id
         invoice_data['link_graphic_representation'] = self.driver.current_url
+        invoice_data['events'] = invoice_events
         self.driver.back()
 
+    def get_invoice_events(self, events_container) -> List[Dict]:
+        events = []
+        if not events_container:
+            return events
+
+        table_body = events_container.find_element(By.TAG_NAME, "tbody")
+        rows = table_body.find_elements(By.TAG_NAME, "tr")
+        for row in rows:
+            columns = row.find_elements(By.TAG_NAME, "td")
+            if not len(columns) >= 3:
+                break
+            event = {
+                "code": str(columns[0].text),
+                "description": str(columns[1].text),
+                "date": str(columns[2].text)
+            }
+            events.append(event)
+        return events
+
     @staticmethod
-    def parse_details(raw_details: str) -> Dict[str, str | dict]:
+    def parse_details(raw_details: str) -> Dict[str, str | dict | list]:
         raw_details = raw_details.replace("Descargar PDF ", "")
         content_lines = raw_details.split("\n")
         result = {}

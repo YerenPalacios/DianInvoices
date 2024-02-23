@@ -6,7 +6,7 @@ class InvoicePayload(BaseModel):
 
 
 class DianEvent(BaseModel):
-    eventNumber: int
+    eventNumber: str
     eventName: str
 
 
