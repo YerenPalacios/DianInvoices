@@ -7,7 +7,7 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from models import DianInvoice
+from schemas import DianInvoice
 
 DIAN_URL = 'https://catalogo-vpfe.dian.gov.co/User/SearchDocument'
 

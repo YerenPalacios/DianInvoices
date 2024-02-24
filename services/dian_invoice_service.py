@@ -1,13 +1,17 @@
 from typing import Dict
 
-from models import DianInvoice, DianEvent, DianEntityInformation
+from repositories import DianInvoiceRepository
+from schemas import DianInvoice, DianEvent, DianEntityInformation
 from scrappers.dian_scrapper import DianScrapper
 
 
 class DianInvoiceService:
 
+    def __init__(self, db):
+        self.dian_invoice_repository = DianInvoiceRepository(db)
+
     @staticmethod
-    def get_dian_invoices(invoice_ids: list[str]) -> Dict[str, DianInvoice]:
+    def get_dian_web_invoices(invoice_ids: list[str]) -> Dict[str, DianInvoice]:
         scrapper = DianScrapper()
         scrapper_invoices = scrapper.get_dian_invoices(invoice_ids)
         dian_invoices = {}
@@ -37,3 +41,10 @@ class DianInvoiceService:
             )
         return dian_invoices
 
+    def get_db_dian_invoices(self):
+        return self.dian_invoice_repository.get_dian_invoices()
+
+    def get_dian_invoices(self, invoice_ids: list[str]) -> Dict[str, DianInvoice]:
+        # self.get_db_dian_invoices()
+        web_dian_invoices = self.get_dian_web_invoices(invoice_ids)
+        return web_dian_invoices
