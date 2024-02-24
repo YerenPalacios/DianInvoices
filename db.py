@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # TODO: add url to env file
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:1234@localhost:3306/DianInvoicesDB"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:1234@host.docker.internal:3306/DianInvoicesDB"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

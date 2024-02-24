@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: 'uvicorn main:app --host 0.0.0.0 --port 8000'
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:8.2.0
+    cap_add:
+      - SYS_NICE
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=DianInvoicesDB
+      - MYSQL_ROOT_PASSWORD=1234
