@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 
 from db import Base, engine, SessionLocal
-from schemas import InvoicePayload
+from schemas import InvoicePayloadSh
 from services.dian_invoice_service import DianInvoiceService
 
 
@@ -18,8 +18,9 @@ def get_db():
     finally:
         db.close()
 
+
 @app.post("/api/v1/get_invoice_information")
-async def get_invoice_information(request: InvoicePayload, db: Session = Depends(get_db)):
+async def get_invoice_information(request: InvoicePayloadSh, db: Session = Depends(get_db)):
     service = DianInvoiceService(db)
     dian_invoices = service.get_dian_invoices(request.cufes)
     return dian_invoices

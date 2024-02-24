@@ -7,7 +7,7 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from schemas import DianInvoice
+from schemas import DianEntitySh, DianEventSh, DianInvoiceSh
 
 DIAN_URL = 'https://catalogo-vpfe.dian.gov.co/User/SearchDocument'
 
@@ -17,7 +17,9 @@ class DianScrapper:
     def __init__(self):
         self.invoices_data = []
 
-    def get_dian_invoices(self, invoice_ids: list[str]) -> List[Dict[str, str]]:
+    def get_dian_invoices(self, invoice_ids: list[str]) -> List[Dict[str, str | dict]]:
+        if not invoice_ids:
+            return []
         self.driver = webdriver.Chrome()
 
         self.driver.get(DIAN_URL)
@@ -26,6 +28,35 @@ class DianScrapper:
             self.get_window_information(invoice_id)
         self.driver.quit()
         return self.invoices_data
+
+    def get_web_information_as_schemas(self, web_dian_invoices) -> Dict[str, DianInvoiceSh]:
+        #TODO: review duplication
+        dian_invoices = {}
+        for scrapper_invoice in web_dian_invoices:
+            seller_information = DianEntitySh(
+                document=scrapper_invoice.get("seller_information", {}).get("NIT"),
+                name=scrapper_invoice.get("seller_information", {}).get("Nombre")
+            )
+
+            receiver_information = DianEntitySh(
+                document=scrapper_invoice.get("receiver_information", {}).get("NIT"),
+                name=scrapper_invoice.get("receiver_information", {}).get("Nombre")
+            )
+
+            events = [
+                DianEventSh(
+                    eventNumber=event.get("code", ""),
+                    eventName=event.get("description", "")
+                ) for event in scrapper_invoice["events"]
+            ]
+
+            dian_invoices[scrapper_invoice["CUFE"]] = DianInvoiceSh(
+                events=events,
+                seller_information=seller_information,
+                receiver_information=receiver_information,
+                link_graphic_representation=scrapper_invoice["link_graphic_representation"]
+            )
+        return dian_invoices
 
     def get_element(self, by: str, value: str) -> (WebElement | None):
         try:

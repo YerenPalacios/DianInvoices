@@ -1,22 +1,22 @@
 from pydantic import BaseModel
 
 
-class InvoicePayload(BaseModel):
+class InvoicePayloadSh(BaseModel):
     cufes: list[str]
 
 
-class DianEvent(BaseModel):
+class DianEventSh(BaseModel):
     eventNumber: str
     eventName: str
 
 
-class DianEntityInformation(BaseModel):
+class DianEntitySh(BaseModel):
     document: str
     name: str
 
 
-class DianInvoice(BaseModel):
-    events: list[DianEvent]
-    seller_information: DianEntityInformation
-    receiver_information: DianEntityInformation
+class DianInvoiceSh(BaseModel):
+    events: list[DianEventSh]
+    seller_information: DianEntitySh
+    receiver_information: DianEntitySh
     link_graphic_representation: str

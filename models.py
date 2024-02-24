@@ -1,7 +1,17 @@
-from sqlalchemy import Column, Integer, DateTime, String, ForeignKey
-from sqlalchemy.orm import relationship
+from typing import List
+
+from sqlalchemy import Column, Integer, DateTime, String, ForeignKey, Table
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.sql import func
 from db import Base
+
+
+dian_event_id = Table(
+    "dian_invoice_events",
+    Base.metadata,
+    Column("invoice_id", ForeignKey("DianInvoice.id")),
+    Column("event_id", ForeignKey("DianEvent.id")),
+)
 
 
 class DianEvent(Base):
@@ -11,8 +21,6 @@ class DianEvent(Base):
     code = Column(String(length=10))
     description = Column(String(length=100))
     date = Column(DateTime(timezone=True), server_default=func.now())
-    invoice = relationship("DianInvoice", back_populates="events")
-    invoice_id = Column(Integer, ForeignKey("DianInvoice.id"))
 
     def __repr__(self):
         return f"<DianEvent(id={self.id})>"
@@ -22,7 +30,7 @@ class DianInvoice(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     cufe = Column(String(length=100))
-    graphic_link = Column(String(length=100))
+    graphic_link = Column(String(length=300))
     total = Column(Integer)
     iva = Column(Integer)
     serie = Column(String(length=10))
@@ -31,9 +39,9 @@ class DianInvoice(Base):
     seller_id = Column(Integer, ForeignKey("DianEntity.id"), nullable=False)
     receiver_id = Column(Integer, ForeignKey("DianEntity.id"), nullable=False)
 
-    seller = relationship("DianEntity",foreign_keys=[seller_id], back_populates="sent_invoices" )
+    seller = relationship("DianEntity",foreign_keys=[seller_id], back_populates="sent_invoices")
     receiver = relationship("DianEntity", foreign_keys=[receiver_id], back_populates="received_invoices")
-    events = relationship("DianEvent", back_populates="invoice")
+    events: Mapped[List[DianEvent]] = relationship(secondary=dian_event_id)
 
     def __repr__(self):
         return f"<DianInvoice(id={self.id})>"
