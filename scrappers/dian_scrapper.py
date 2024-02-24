@@ -86,9 +86,10 @@ class DianScrapper:
         invoice_raw_details = " ".join([div.text for div in divs_with_with_details])
         invoice_data = self.parse_details(invoice_raw_details)
         invoice_events = self.get_invoice_events(self.get_element(By.ID,"container1"))
+        pdf_link = self.get_element(By.CLASS_NAME, "downloadPDFUrl")
         self.invoices_data.append(invoice_data)
         invoice_data['cufe'] = invoice_id
-        invoice_data['link_graphic_representation'] = self.driver.current_url
+        invoice_data['link_graphic_representation'] = pdf_link.get_attribute('href')
         invoice_data['events'] = invoice_events
         self.driver.back()
 
