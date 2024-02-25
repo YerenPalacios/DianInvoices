@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Dict
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from models import DianInvoice, DianEntity, DianEvent
 from schemas import DianInvoiceSh, DianEventSh, DianEntitySh
@@ -12,7 +12,11 @@ class DianInvoiceRepository:
         self.db = db
 
     def get_dian_invoices(self, invoice_cufes) -> Dict[str, DianInvoiceSh]:
-        db_dian_invoices = self.db.query(DianInvoice).filter(
+        db_dian_invoices = self.db.query(DianInvoice).options(
+            joinedload(DianInvoice.seller),
+            joinedload(DianInvoice.receiver),
+            joinedload(DianInvoice.events)
+        ).filter(
             DianInvoice.cufe.in_(invoice_cufes)
         ).all()
         dian_invoices = {}
