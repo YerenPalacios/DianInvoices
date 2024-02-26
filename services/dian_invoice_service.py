@@ -1,8 +1,11 @@
+import logging
 from typing import Dict
 
 from repositories import DianInvoiceRepository
 from schemas import DianInvoiceSh
 from scrappers.dian_scrapper import DianScrapper
+
+logger = logging.getLogger(__name__)
 
 
 class DianInvoiceService:

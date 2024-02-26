@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import List, Dict
 
@@ -6,12 +7,14 @@ from sqlalchemy.orm import Session, joinedload
 from models import DianInvoice, DianEntity, DianEvent
 from schemas import DianInvoiceSh, DianEventSh, DianEntitySh
 
+logger = logging.getLogger(__name__)
 
 class DianInvoiceRepository:
     def __init__(self, db: Session):
         self.db = db
 
     def get_dian_invoices(self, invoice_cufes) -> Dict[str, DianInvoiceSh]:
+        logger.info(f"Getting db dian invoices")
         db_dian_invoices = self.db.query(DianInvoice).options(
             joinedload(DianInvoice.seller),
             joinedload(DianInvoice.receiver),
@@ -46,6 +49,7 @@ class DianInvoiceRepository:
         db_entity = self.db.query(DianEntity).filter(DianEntity.nit == nit).first()
         if db_entity:
             return db_entity
+        logger.info(f"Creating dian entity {nit}")
         db_entity = DianEntity(name=name, nit=nit)
         self.db.add(db_entity)
         self.db.commit()
@@ -55,6 +59,7 @@ class DianInvoiceRepository:
         db_invoice = self.db.query(DianInvoice).filter(DianInvoice.cufe == data["CUFE"]).first()
         if db_invoice:
             return db_invoice
+        logger.info(f"Creating dian invoice {data['CUFE']}")
         db_invoice = DianInvoice(
             cufe=data["CUFE"],
             graphic_link=data["link_graphic_representation"],
@@ -77,7 +82,7 @@ class DianInvoiceRepository:
 
         if db_event:
             return db_event
-
+        logger.info(f"Creating dian event {data['code']}")
         db_event = DianEvent(
             code=data["code"],
             description=data["description"]

@@ -1,3 +1,4 @@
+import logging
 from debug_toolbar.middleware import DebugToolbarMiddleware
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
@@ -6,8 +7,11 @@ from db import Base, engine, SessionLocal
 from schemas import InvoicePayloadSh, DianInvoiceSh
 from services.dian_invoice_service import DianInvoiceService
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(debug=True)
 app.add_middleware(
@@ -28,6 +32,7 @@ def get_db():
 async def get_invoice_information(request: InvoicePayloadSh, db: Session = Depends(get_db)) -> dict[str, DianInvoiceSh]:
     """ With the given cufes, this endpoint will get the invoice information from Dian url
         if the data is not saved in the database else it will return database information """
+    logger.debug("Request invoice information")
     service = DianInvoiceService(db)
     dian_invoices = service.get_dian_invoices(request.cufes)
     return dian_invoices

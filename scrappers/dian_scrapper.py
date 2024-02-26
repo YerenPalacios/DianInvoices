@@ -1,5 +1,6 @@
 import time
-from random import randint
+import logging
+from random import uniform
 from typing import Dict, List
 
 from fastapi import HTTPException
@@ -10,8 +11,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 from schemas import DianEntitySh, DianEventSh, DianInvoiceSh
+logger = logging.getLogger(__name__)
 
 DIAN_URL = 'https://catalogo-vpfe.dian.gov.co/User/SearchDocument'
+NUMBER_OF_RETRIES = 8
 
 
 class DianScrapper:
@@ -31,7 +34,9 @@ class DianScrapper:
         try:
             self.driver = webdriver.Chrome(options=chrome_options)
             self.driver.get(DIAN_URL)
+            logger.info("Chrome driver started")
         except (WebDriverException, SessionNotCreatedException) as e:
+            logger.error("Chrome driver failed")
             raise HTTPException(status_code=404, detail=str(e))
 
         for invoice_id in invoice_ids:
@@ -75,33 +80,44 @@ class DianScrapper:
             return None
 
     def get_window_information(self, invoice_id: str):
-        cufe_input = self.get_element(By.ID, "DocumentKey")
-        search_button = self.get_element(By.CLASS_NAME, "search-document")
-        if not cufe_input or not search_button:
-            return
-        cufe_input.clear()
-        cufe_input.send_keys(invoice_id)
-        time.sleep(randint(2, 8))
-        search_button.click()
+        logger.info("Searching invoice information")
         found_error = False
-        if invoice_id not in self.driver.current_url:
+        for i in range(NUMBER_OF_RETRIES):
+            cufe_input = self.get_element(By.ID, "DocumentKey")
             search_button = self.get_element(By.CLASS_NAME, "search-document")
-            time.sleep(randint(2, 8))
+            if not cufe_input or not search_button:
+                return
+
+            cufe_input.clear()
+            cufe_input.send_keys(invoice_id)
+            time.sleep(uniform(1, 5))
             search_button.click()
-            if invoice_id not in self.driver.current_url:
-                found_error = True
+            if invoice_id in self.driver.current_url:
+                found_error = False
+                break
+            found_error = True
+            failed_reason = "unknown"
+            error_div = self.get_element(By.CLASS_NAME, "field-validation-error")
+            if error_div:
+                failed_reason = error_div.text
+
+            logger.error(f"Try {i+1}: Invoice search error, reason: {failed_reason}")
+            time.sleep(uniform(1, 5))
+
         if found_error:
+            logger.error(f"Could not get invoice information: {invoice_id}")
             return
+        logger.info(f"Getting invoice information {invoice_id}")
         divs_with_with_details = self.driver.find_elements(By.CLASS_NAME, "row-fe-details")
         invoice_raw_details = " ".join([div.text for div in divs_with_with_details])
         invoice_data = self.parse_details(invoice_raw_details)
-        invoice_events = self.get_invoice_events(self.get_element(By.ID,"container1"))
+        invoice_events = self.get_invoice_events(self.get_element(By.ID, "container1"))
         pdf_link = self.get_element(By.CLASS_NAME, "downloadPDFUrl")
         self.invoices_data.append(invoice_data)
         invoice_data['cufe'] = invoice_id
         invoice_data['link_graphic_representation'] = pdf_link.get_attribute('href')
         invoice_data['events'] = invoice_events
-        self.driver.back()
+        self.driver.get(DIAN_URL)
 
     def get_invoice_events(self, events_container) -> List[Dict]:
         events = []
