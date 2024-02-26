@@ -81,12 +81,12 @@ class DianScrapper:
             return
         cufe_input.clear()
         cufe_input.send_keys(invoice_id)
-        time.sleep(randint(40, 100) / 100)
+        time.sleep(randint(2, 8))
         search_button.click()
         found_error = False
         if invoice_id not in self.driver.current_url:
-            time.sleep(randint(40, 100) / 100)
             search_button = self.get_element(By.CLASS_NAME, "search-document")
+            time.sleep(randint(2, 8))
             search_button.click()
             if invoice_id not in self.driver.current_url:
                 found_error = True
